@@ -17,9 +17,15 @@ def deck_maker():
 def shuffle_deck(deck):
     return random.shuffle(deck)
 
-def deal_cards(deck, players):
+def flip_card(deck, pile):
+    pile.append(deck.pop())
+
+def deal_cards(deck, players, pile):
     for x in range(0,7):
         for player in list(players.keys()):
             players[player].append(deck.pop())
     
-
+    # Flip first card
+    while len(pile)<1 or pile[-1].startswith('wild'):
+        flip_card(deck, pile)
+    
