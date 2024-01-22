@@ -1,15 +1,16 @@
-from cards import deck_maker, shuffle_deck, deal_cards, flip_card
+from cards import Card, Deck
+from players import Player
 
 number_players = int(input("Enter the number of players: "))
 players = {}
-pile = []
+
 
 for x in range(1, number_players+1):
-    players['player-' + str(x)] = []
+    players['Player-' + str(x)] = Player('Player-' + str(x))
 
-deck = deck_maker()
-shuffle_deck(deck)
-deal_cards(deck, players, pile)
+deck = Deck()
+deck.deal_cards(players)
+deck.flip_card()
 
-print(players)
-print(pile)
+for player in list(players.keys()):
+    print(players[player].show_name(), players[player].show_hand())
