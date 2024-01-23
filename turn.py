@@ -30,22 +30,22 @@ class Turn:
     def __str__(self) -> str:
         pass
 
-    def find_playable(self):
-        self.player.find_playable_card(self.card_on_pile)
+    def find_playable(self, hand=None):
+        self.player.find_playable_card(self.card_on_pile, hand)
 
     def choose_card(self, list_of_playable):
         print('before sorting', list_of_playable)
         list_of_playable.sort(key=lambda card: sort_by_number(card))
         print('after sorting', list_of_playable)
         # This will remove from playable_cards list
-        return list_of_playable.pop()
+        return list_of_playable.pop(0)
 
     def play_card(self, chosen_card):
         # Remove the card from hand list
         self.player.hand.remove(chosen_card)
         # Add the card to the discard pile
         self.deck.add_to_discard(chosen_card)
-        
+
         print(self.player.show_playable_cards(), self.player.show_hand())
         print(str(chosen_card), self.deck.show_discard_pile())
 
@@ -57,11 +57,13 @@ class Turn:
             self.play_card(chosen_card)
         # Or draw a card
         else:
-            # draw card
+            card_drawn = self.deck.draw_card()
             # evaluate card if playable
-            # if not, pass;
-            # if yes, play;
-            pass
+            if (self.player.is_playable(card_drawn, self.card_on_pile)):
+                self.play_card(card_drawn)
+            else:
+                # add card to hand and next turn
+                self.player.hand.append(card_drawn)
 
     
 

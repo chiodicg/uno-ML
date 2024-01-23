@@ -52,7 +52,7 @@ class Deck:
         if len(self.cards) == 0:
             self.cards = random.shuffle(self.cards_pile)
             self.cards_disc = []
-        return self.cards.pop()
+        return self.cards.pop(0)
 
     def flip_card(self):
         # Draw from deck and add to the discard pile
