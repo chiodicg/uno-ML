@@ -1,4 +1,5 @@
 from cards import show_cards_list
+        
 class Player:
     def __init__(self, name):
         self.name = name
@@ -21,10 +22,9 @@ class Player:
         for card in self.hand:
             # Any wildcard, or Same coloured card (any value) or same valued card (any colour), including plus2
             if (card.colour == "wild" or card.colour == pile_colour or card.value == pile_value):
-                self.playable_cards.append(str(card))
-        # Sort playable cards
-        self.playable_cards.sort(key=lambda card: str(card))
+                self.playable_cards.append(card)
         
     def show_playable_cards(self):
         return show_cards_list(self.playable_cards)
 
+    

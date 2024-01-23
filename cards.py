@@ -50,19 +50,22 @@ class Deck:
     
     def draw_card(self):
         if len(self.cards) == 0:
-            self.cards = self.cards_pile
+            self.cards = random.shuffle(self.cards_pile)
             self.cards_disc = []
         return self.cards.pop()
 
     def flip_card(self):
         # Draw from deck and add to the discard pile
         while len(self.cards_pile) < 1 or self.cards_pile[-1].value not in range(0,10):
-            self.cards_pile.append(self.draw_card())
+            self.add_to_discard(self.draw_card())
 
     def deal_cards(self, players):
         for x in range(0,7):
             for player in list(players.keys()):
                 players[player].add_to_hand(self.draw_card())
+
+    def add_to_discard(self, card):
+        self.cards_pile.append(card)
 
 
 def show_cards_list(list: list[Card]):
