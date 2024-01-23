@@ -1,15 +1,12 @@
 import random
 
-colours = ["red", "green", "blue", "yellow"]
-wildcards = ["wild-colour", "wild-plus4"]
-
 class Card:
     def __init__(self, colour, value):
         self.colour = colour
         self.value = value
 
-    def show(self):
-        return(self.colour + '_' + str(self.value))
+    def __str__(self) -> str:
+        return self.colour + '_' + str(self.value)
 
 class Deck:
     def __init__(self):
@@ -31,10 +28,7 @@ class Deck:
         self.cards = cards_zero + cards_numbers + cards_actions + cards_wildcards
     
     def show(self):
-        cards = []
-        for card in self.cards:
-            cards.append(card.show())
-        return cards
+        return show_cards_list(self.cards)
     
     def length(self):
         return len(self.cards)
@@ -46,11 +40,13 @@ class Deck:
         self.cards_pile.append(card)
 
     def show_last_discarded(self):
-        self.cards_pile[-1].show()
+        return str(self.cards_pile[-1])
+    
+    def get_last_discarded(self):
+        return self.cards_pile[-1]
 
-    def show_discart_pile(self):
-        for card in self.cards_pile:
-            card.show()
+    def show_discard_pile(self):
+        return show_cards_list(self.cards_pile)
     
     def draw_card(self):
         if len(self.cards) == 0:
@@ -67,3 +63,10 @@ class Deck:
         for x in range(0,7):
             for player in list(players.keys()):
                 players[player].add_to_hand(self.draw_card())
+
+
+def show_cards_list(list: list[Card]):
+    cards = []
+    for card in list:
+        cards.append(str(card))
+    return cards
