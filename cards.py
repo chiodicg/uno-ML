@@ -50,8 +50,11 @@ class Deck:
     
     def draw_card(self):
         if len(self.cards) == 0:
-            self.cards = random.shuffle(self.cards_pile)
-            self.cards_disc = []
+            # Keep the last discarded card, shuffle the rest of the pile to make them as a deck
+            last_card = self.cards_pile.pop(-1)
+            random.shuffle(self.cards_pile)
+            self.cards = self.cards_pile
+            self.cards_pile = [last_card]
         return self.cards.pop(0)
 
     def flip_card(self):
