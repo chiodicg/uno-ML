@@ -20,31 +20,24 @@ You may pickup a new card from the deck if you don't want to play or can't
 If the card you pickup is the only playable card which you have then you can play it
 """
 class Turn:
-    def __init__(self, player, deck, card_on_pile, game_over):
+    def __init__(self, player, deck, card_on_pile):
         self.player = player
         self.deck = deck
         self.card_on_pile = card_on_pile
-        self.game_over = game_over
+        self.game_over = False
+        print(f'The card on the table is {str(self.card_on_pile)}. It is {str(self.player)} turn.')
         self.find_playable()
         self.play()
 
     def __str__(self) -> str:
-        pass
+        return str(self.game_over)
 
-    def evaluate_table(self):
-        # Evaluate if the card on the table is an action or wildcard
-        if not self.card_on_pile.value.isdigit():
-            if self.card_on_pile.value == 'plus4':
-                pass
-            if self.card_on_pile.value == 'colour':
-                pass
-            if self.card_on_pile.value == 'plus2':
-                pass
-            if self.card_on_pile.value == 'reverse':
-                pass
-            if self.card_on_pile.value == 'skip':
-                pass
-
+    def evaluate_hand(self):
+        if len(self.player.hand) == 1:
+            print(f'{str(self.player)} shouts UNO!')
+        elif len(self.player.hand) == 0:
+            print(f'{str(self.player)} wins!')
+            self.game_over = True
 
     def find_playable(self, hand=None):
         self.player.find_playable_card(self.card_on_pile, hand)
@@ -59,18 +52,11 @@ class Turn:
 
     def play_card(self, chosen_card):
         # Add the card to the discard pile
-        self.deck.add_to_discard(chosen_card)
-        if (len(self.player.hand) == 0):
-            self.game_over = True
-            print(f'{str(self.player)} wins')
-
-        # print(self.player.show_playable_cards(), self.player.show_hand())
-        # print(str(chosen_card), self.deck.show_discard_pile())
+        self.deck.discard(chosen_card)
 
     def play(self):
         # If player has a playable card, then choose one to discard
         print(f'{str(self.player)} has {len(self.player.playable_cards)} playable cards')
-        print(f'{str(self.player)} has {len(self.player.hand)} in its hand')
         if (len(self.player.playable_cards) > 0):
             chosen_card = self.choose_card(self.player.playable_cards)
             self.play_card(chosen_card)
@@ -87,6 +73,8 @@ class Turn:
                 # add card to hand and next turn
                 self.player.hand.append(card_drawn)
                 print(f'{str(self.player)} pass the turn')
+        print(f'{str(self.player)} has {len(self.player.hand)} in its hand')
+        self.evaluate_hand()
 
     
 

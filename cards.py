@@ -1,5 +1,7 @@
 import random
 
+colours = ["red", "green", "blue", "yellow"]
+
 class Card:
     def __init__(self, colour, value):
         self.colour = colour
@@ -16,7 +18,6 @@ class Deck:
         self.shuffle()
 
     def build(self):
-        colours = ["red", "green", "blue", "yellow"]
         wildcards = ["colour", "plus4"]
         action = ["skip", "reverse", "plus2"]
 
@@ -50,6 +51,8 @@ class Deck:
     
     def draw_card(self):
         if len(self.cards) == 0:
+            # Remove any cards with None value (when players would play the Colour Wildcard and choose a new colour)
+            self.cards_pile = list(filter(lambda card: card.value != None, self.cards_pile))
             # Keep the last discarded card, shuffle the rest of the pile to make them as a deck
             last_card = self.cards_pile.pop(-1)
             random.shuffle(self.cards_pile)
@@ -60,16 +63,12 @@ class Deck:
     def flip_card(self):
         # Draw from deck and add to the discard pile
         while len(self.cards_pile) < 1 or self.cards_pile[-1].value not in range(0,10):
-            self.add_to_discard(self.draw_card())
+            self.discard(self.draw_card())
 
     def deal_cards(self, players):
         for x in range(0,7):
             for player in list(players.keys()):
                 players[player].add_to_hand(self.draw_card())
-
-    def add_to_discard(self, card):
-        self.cards_pile.append(card)
-
 
 def show_cards_list(list: list[Card]):
     cards = []

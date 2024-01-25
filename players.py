@@ -1,4 +1,4 @@
-from cards import show_cards_list
+from cards import Card, show_cards_list
         
 class Player:
     def __init__(self, name):
@@ -13,11 +13,14 @@ class Player:
         return show_cards_list(self.hand)
 
     def add_to_hand(self, card):
-        self.hand.append(card)
+        if isinstance(card, Card):
+            self.hand.append(card)
+        else:
+            self.hand.extend(card)
 
     def find_playable_card(self, card_on_pile, hand=None):
         self.playable_cards = []
-        
+
         if (hand is None):
             hand = self.hand
 
