@@ -26,6 +26,7 @@ for player in list_of_players:
 deck.flip_card()
 
 def get_next_player(current_player, turn):
+    global play_direction
     if turn == 0:
         next_player = 0
     else:
@@ -36,7 +37,7 @@ def get_next_player(current_player, turn):
         elif play_direction == -1:
             next_player = current_player - 1
             if next_player <= 0:
-                next_player = number_players
+                next_player = number_players - 1
 
     return next_player
 
@@ -47,10 +48,12 @@ def draw_cards(number_of_cards, player):
 
 
 def skip_player():
+    global current_player
     #  Get next player. This will then be skipped, because the same code will run again before the turn.
     current_player = get_next_player(current_player, turn_count)
 
 def reverse_order():
+    global play_direction
     if play_direction == 1:
         play_direction = -1
         return
@@ -72,27 +75,29 @@ def evaluate_card_played():
 
 while not game_over:
     for i in range(0, number_players):
-        if action_preturn:
-            if action_preturn == 'plus4' or action_preturn == 'plus2':
-                player = list_of_players[get_next_player(current_player, turn_count)]
-                draw_cards(int(action_preturn[-1]), player)
-            elif action_preturn == 'colour':
-                choose_colour()
-            elif action_preturn == 'reverse':
-                reverse_order()
-            elif action_preturn == 'skip':
-                skip_player()
-            action_preturn = None
-
-        current_player = get_next_player(current_player, turn_count)
-        print('current player number:', current_player)
-        card_on_pile = deck.get_last_discarded()
-        turn = str(Turn(list_of_players[current_player], deck, card_on_pile))
-        if turn == True:
-            game_over = True
+        if game_over:
+            pass
         else:
-            action_preturn = evaluate_card_played()
-            turn_count += 1
+            if action_preturn:
+                if action_preturn == 'plus4' or action_preturn == 'plus2':
+                    player = list_of_players[get_next_player(current_player, turn_count)]
+                    draw_cards(int(action_preturn[-1]), player)
+                elif action_preturn == 'colour':
+                    choose_colour()
+                elif action_preturn == 'reverse':
+                    reverse_order()
+                elif action_preturn == 'skip':
+                    skip_player()
+                action_preturn = None
+
+            current_player = get_next_player(current_player, turn_count)
+            card_on_pile = deck.get_last_discarded()
+            turn = str(Turn(list_of_players[current_player], deck, card_on_pile))
+            if turn == 'True':
+                game_over = True
+            else:
+                action_preturn = evaluate_card_played()
+                turn_count += 1
 
 print('turns:', turn_count)
 
