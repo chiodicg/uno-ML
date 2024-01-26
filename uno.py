@@ -36,7 +36,7 @@ def get_next_player(current_player, turn):
                 next_player = 0
         elif play_direction == -1:
             next_player = current_player - 1
-            if next_player <= 0:
+            if next_player < 0:
                 next_player = number_players - 1
 
     return next_player
