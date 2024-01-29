@@ -46,6 +46,10 @@ class Turn:
             print(f'{str(self.player)} shouts UNO!')
             self.shout = True
             return True
+        elif shout_choice == 'random' or shout_choice == '':
+            rand_shout = random.choice([True, False])
+            self.shout = rand_shout
+            return rand_shout
         else:
             self.shout = False
             return False
