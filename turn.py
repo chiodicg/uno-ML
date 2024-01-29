@@ -55,6 +55,7 @@ class Turn:
             return False
 
     def evaluate_hand(self):
+        # To implement later if we want the option to shout UNO at any part of the play
         # if len(self.player.hand) > 1:
         #     if self.shout:
         #         draw_cards(self.deck, 2, self.player)
@@ -63,6 +64,8 @@ class Turn:
             shout = self.shout_UNO_choice()
             if not shout:
                 draw_cards(self.deck, 2, self.player)
+            else:
+                self.shout = False
         elif len(self.player.hand) == 0:
             self.game_over = True
 
@@ -97,8 +100,6 @@ class Turn:
         self.player.playable_cards.sort(key=lambda card: sort_by_number(card))
         print(f'This is the list of {str(self.player)} playable cards: {self.player.show_playable_cards()}')
         chosen = self.choice_for_card()
-        # chosen_card = input(f'Choose one of the playable cards by typing either the index (from 0 to {str(len(self.player.playable_cards)-1)}) or the name of the card: ')
-        # validated = self.validate_chosen(chosen_card, self.player.playable_cards)
         while chosen is False:
             chosen = self.choice_for_card()
         # This will remove from playable_cards list
