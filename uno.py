@@ -1,4 +1,4 @@
-from cards import Deck
+from cards import Deck, show_cards_list
 from players import Player
 from turn import Turn
 from actions import get_next_player,draw_cards,reverse_order, choose_colour, evaluate_card_played
@@ -10,7 +10,8 @@ turn_count = 0
 game_over = False
 play_direction = 1
 current_player = 0
-action_preturn = None
+action_preturn = 'plus2'
+plus2_counter = 2
 
 for player_number in range(1, number_players+1):
     players['Player-' + str(player_number)] = Player('Player-' + str(player_number), player_number <= number_bots)
@@ -30,13 +31,23 @@ deck.flip_card()
 
 while not game_over:
     if action_preturn:
-        player = list_of_players[get_next_player(current_player, turn_count, number_players, play_direction)]
-        if action_preturn == 'plus4' or action_preturn == 'plus2':
-            draw_cards(deck, int(action_preturn[-1]), player)
-            if action_preturn == 'plus4':
-                choose_colour(deck, player)
+        current = list_of_players[current_player]
+        next_player = list_of_players[get_next_player(current_player, turn_count, number_players, play_direction)]
+        if action_preturn == 'plus2':
+            if not any(card.value == 'plus2' for card in next_player.hand):
+                print(f'{str(next_player)} draws {plus2_counter} cards')
+                draw_cards(deck, plus2_counter, next_player)
+                plus2_counter = 2
+            else:
+                plus2_counter = plus2_counter + 2
+        if action_preturn == 'plus4':
+            print(f'Player hand: {show_cards_list(current.hand)}')
+            choose_colour(deck, current)
+            print(f'{str(next_player)} draws 4 cards')
+            draw_cards(deck, 4, next_player)
         elif action_preturn == 'colour':
-            choose_colour(deck, player)
+            print(f'Player hand: {show_cards_list(current.hand)}')
+            choose_colour(deck, current)
         elif action_preturn == 'reverse':
             reverse_order(play_direction)
         elif action_preturn == 'skip':

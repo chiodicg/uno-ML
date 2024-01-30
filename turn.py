@@ -10,11 +10,11 @@ import random
 def sort_by_number(card):
         if (not str(card).startswith('wild')):
             if(str(card).split("_")[-1].isdigit()):
-                return f"0{str(card)}"
+                return f"2{str(card)}"
             else:
                 return f"1{str(card)}"
         else:
-            return f"2{str(card)}"
+            return f"0{str(card)}"
         
 
 """
@@ -57,11 +57,9 @@ class Turn:
         #     if self.shout:
         #         draw_cards(self.deck, 2, self.player)
         #         self.shout = False
-        print(len(self.player.hand))
         if len(self.player.hand) == 1:
             if self.player.bot:
                 shout = random.choice([True, False])
-                print(shout)
             else:
                 shout = self.shout_UNO_choice()
 
@@ -74,6 +72,7 @@ class Turn:
 
     def find_playable(self):
         self.player.find_playable_card(self.card_on_pile)
+        self.player.playable_cards.sort(key=lambda card: sort_by_number(card), reverse=True)
 
     def get_random_card(self, list_cards):
             if len(list_cards) == 0:
@@ -83,9 +82,7 @@ class Turn:
                 return list_cards[0]
 
     def validate_chosen(self, chosen_method, same_colour, same_value, wildcard):
-        if chosen_method == '':
-            return False
-        elif chosen_method == 'random':
+        if chosen_method == '' or chosen_method == 'random':
             return self.player.playable_cards[random.randint(0, len(self.player.playable_cards)-1)]
         elif chosen_method == 'colour':
             return self.get_random_card(same_colour)
@@ -112,43 +109,47 @@ class Turn:
             chosen_method = input(f'Do you want to choose a card by {methods}? ').lower()
             return self.validate_chosen(chosen_method, same_colour, same_value, wildcard)
 
-    def choose_card(self):
-        self.player.playable_cards.sort(key=lambda card: sort_by_number(card))
-        same_colour = [card for card in self.player.playable_cards if card.colour == self.card_on_pile.colour]
-        same_value = [card for card in self.player.playable_cards if card.value == self.card_on_pile.value]
-        wildcard = [card for card in self.player.playable_cards if card.colour == "wild"]
+    def choose_card(self, same_colour, same_value, wildcard):
         print(f'This is the list of {str(self.player)} playable cards by colour: {show_cards_list(same_colour)}')
         print(f'This is the list of {str(self.player)} playable cards by value: {show_cards_list(same_value)}')
         print(f'This is the list of {str(self.player)} playable cards by wildcard: {show_cards_list(wildcard)}')
+        # If card on pile is plus2, then only play a plus
         chosen = self.choice_for_card(same_colour, same_value, wildcard)
         while chosen is False:
             chosen = self.choice_for_card(same_colour, same_value, wildcard)
-
-        print(f'{str(self.player)} played {str(chosen)}')
-        # Remove the card from hand list and playable
-        self.player.hand.remove(chosen)
-        self.player.playable_cards.remove(chosen)
         return chosen
 
-    def play_card(self, chosen_card):
+    def play_card(self, chosen_card, remove_from_hand):
+        if remove_from_hand:
+            # Remove the card from hand list and playable
+            self.player.hand.remove(chosen_card)
+            self.player.playable_cards.remove(chosen_card)
         # Add the card to the discard pile
         self.deck.discard(chosen_card)
         print(f'{str(self.player)} plays the card {str(chosen_card)}')
-        # self.shout_UNO_choice()
+        # TODO: self.shout_UNO_choice()
 
     def play(self):
-        # If player has a playable card, then choose one to discard
+        same_colour = [card for card in self.player.playable_cards if card.colour == self.card_on_pile.colour]
+        same_value = [card for card in self.player.playable_cards if card.value == self.card_on_pile.value]
+        wildcard = [card for card in self.player.playable_cards if card.colour == "wild"]
         print(f'{str(self.player)} has {len(self.player.playable_cards)} playable cards')
-        if (len(self.player.playable_cards) > 0):
-            chosen_card = self.choose_card()
-            self.play_card(chosen_card)
+        print(self.card_on_pile.value == 'plus2', any(card.value == 'plus2' for card in self.player.hand))
+        # if plus2 on discard pile, and have plus2 in hand, then play the plus2 to counteract.
+        if self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.hand):
+            chosen_card = self.get_random_card(same_value)
+            self.play_card(chosen_card, True)
+        # If player has a playable card, then choose one to discard
+        elif (len(self.player.playable_cards) > 0):
+            chosen_card = self.choose_card(same_colour, same_value, wildcard)
+            self.play_card(chosen_card, True)
         # Or draw a card
         else:
             print(f'{str(self.player)} is drawing a card')
             card_drawn = self.deck.draw_card()
             # evaluate card if playable
             if (self.player.is_playable(card_drawn, self.card_on_pile)):
-                self.play_card(card_drawn)
+                self.play_card(card_drawn, False)
             else:
                 # add card to hand and next turn
                 self.player.hand.append(card_drawn)
