@@ -1,8 +1,9 @@
 from cards import Card, show_cards_list
         
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, bot):
         self.name = name
+        self.bot = bot
         self.hand = []
         self.playable_cards = []
 
@@ -18,13 +19,10 @@ class Player:
         else:
             self.hand.extend(card)
 
-    def find_playable_card(self, card_on_pile, hand=None):
+    def find_playable_card(self, card_on_pile):
         self.playable_cards = []
 
-        if (hand is None):
-            hand = self.hand
-
-        for card in hand:
+        for card in self.hand:
             # Any wildcard, or Same coloured card (any value) or same valued card (any colour), including plus2
             if (self.is_playable(card, card_on_pile)):
                 self.playable_cards.append(card)

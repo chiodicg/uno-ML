@@ -36,12 +36,15 @@ def colour_chosen_validation(chosen_colour):
     else:
         return Card(chosen_colour,None)
     
-def colour_choice():
-    next_colour = str(input('Please, select a colour for the next round. The choices are: random, red, blue, green or yellow.')).lower()
-    return colour_chosen_validation(next_colour)
+def colour_choice(player):
+    if player.bot:
+        return colour_chosen_validation('random')
+    else:
+        next_colour = str(input('Please, select a colour for the next round. The choices are: random, red, blue, green or yellow.')).lower()
+        return colour_chosen_validation(next_colour)
 
-def choose_colour(deck):
-    next_colour = colour_choice()
+def choose_colour(deck, player):
+    next_colour = colour_choice(player)
     
     while next_colour is False:
         next_colour = colour_choice()

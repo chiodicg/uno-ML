@@ -1,4 +1,4 @@
-from cards import show_cards_list
+from cards import show_cards_list, Card
 from actions import draw_cards
 import random
 
@@ -24,15 +24,16 @@ You may pickup a new card from the deck if you don't want to play or can't
 If the card you pickup is the only playable card which you have then you can play it
 """
 class Turn:
-    def __init__(self, player, deck, card_on_pile):
+    def __init__(self, player, deck):
         self.player = player
         self.deck = deck
-        self.card_on_pile = card_on_pile
+        self.card_on_pile = deck.get_last_discarded()
         self.game_over = False
         print(f'The card on the table is {str(self.card_on_pile)}. It is {str(self.player)} turn.')
         self.find_playable()
         self.play()
-        self.shout = False
+        self.evaluate_hand()
+        print(f'{str(self.player)} has {len(self.player.hand)} in its hand')
 
     def __str__(self) -> str:
         if self.game_over:
@@ -43,15 +44,11 @@ class Turn:
     def shout_UNO_choice(self):
         shout_choice = input('Do you want to shout UNO? Please reply with "Yes" or "No". ').lower()
         if shout_choice == 'yes' or shout_choice == 'y':
-            print(f'{str(self.player)} shouts UNO!')
-            self.shout = True
             return True
         elif shout_choice == 'random' or shout_choice == '':
             rand_shout = random.choice([True, False])
-            self.shout = rand_shout
             return rand_shout
         else:
-            self.shout = False
             return False
 
     def evaluate_hand(self):
@@ -60,54 +57,78 @@ class Turn:
         #     if self.shout:
         #         draw_cards(self.deck, 2, self.player)
         #         self.shout = False
+        print(len(self.player.hand))
         if len(self.player.hand) == 1:
-            shout = self.shout_UNO_choice()
+            if self.player.bot:
+                shout = random.choice([True, False])
+                print(shout)
+            else:
+                shout = self.shout_UNO_choice()
+
             if not shout:
                 draw_cards(self.deck, 2, self.player)
             else:
-                self.shout = False
+                print(f'{str(self.player)} shouts UNO!')
         elif len(self.player.hand) == 0:
             self.game_over = True
 
-    def find_playable(self, hand=None):
-        self.player.find_playable_card(self.card_on_pile, hand)
+    def find_playable(self):
+        self.player.find_playable_card(self.card_on_pile)
 
-    def validate_chosen(self, chosen_card):
-        list_strings = show_cards_list(self.player.playable_cards)
-        
-        # if index not present on list
-        if chosen_card.isdigit():
-            if not int(chosen_card) in range(0, len(self.player.playable_cards)):
+    def get_random_card(self, list_cards):
+            if len(list_cards) == 0:
                 return False
             else:
-                return int(chosen_card)
-        # if card does not exist on list
+                # choose the highest value, because we sorted the playable list before
+                return list_cards[0]
+
+    def validate_chosen(self, chosen_method, same_colour, same_value, wildcard):
+        if chosen_method == '':
+            return False
+        elif chosen_method == 'random':
+            return self.player.playable_cards[random.randint(0, len(self.player.playable_cards)-1)]
+        elif chosen_method == 'colour':
+            return self.get_random_card(same_colour)
+        elif chosen_method == 'value':
+           return self.get_random_card(same_value)
+        elif chosen_method == 'wildcard':
+            return self.get_random_card(wildcard)
         else:
-            if chosen_card == '':
-                return 0
-            elif chosen_card == 'random':
-                return random.randint(0, len(list_strings)-1)
-            elif not chosen_card in list_strings:
-                return False
-            else:
-                return list_strings.index(chosen_card)
+            return False
             
-    def choice_for_card(self):
-        chosen_card = input(f'Choose one of the playable cards by typing "random" OR the index (from 0 to {str(len(self.player.playable_cards)-1)}) OR the name of the card: ')
-        return self.validate_chosen(chosen_card)
+    def choice_for_card(self, same_colour, same_value, wildcard):
+        if self.player.bot:
+            return self.player.playable_cards[0]
+        else:
+            methods = ''
+            if len(same_colour) > 0:
+                methods = methods + 'colour or '
+            if len(same_value) > 0:
+                methods = methods + 'value or '
+            if len(wildcard) > 0:
+                methods = methods + 'wildcard or '
+            methods = methods + 'random'
+
+            chosen_method = input(f'Do you want to choose a card by {methods}? ').lower()
+            return self.validate_chosen(chosen_method, same_colour, same_value, wildcard)
 
     def choose_card(self):
         self.player.playable_cards.sort(key=lambda card: sort_by_number(card))
-        print(f'This is the list of {str(self.player)} playable cards: {self.player.show_playable_cards()}')
-        chosen = self.choice_for_card()
+        same_colour = [card for card in self.player.playable_cards if card.colour == self.card_on_pile.colour]
+        same_value = [card for card in self.player.playable_cards if card.value == self.card_on_pile.value]
+        wildcard = [card for card in self.player.playable_cards if card.colour == "wild"]
+        print(f'This is the list of {str(self.player)} playable cards by colour: {show_cards_list(same_colour)}')
+        print(f'This is the list of {str(self.player)} playable cards by value: {show_cards_list(same_value)}')
+        print(f'This is the list of {str(self.player)} playable cards by wildcard: {show_cards_list(wildcard)}')
+        chosen = self.choice_for_card(same_colour, same_value, wildcard)
         while chosen is False:
-            chosen = self.choice_for_card()
-        # This will remove from playable_cards list
-        get_card = self.player.playable_cards.pop(chosen)
-        print(f'{str(self.player)} played {str(get_card)}')
-        # Remove the card from hand list
-        self.player.hand.remove(get_card)
-        return get_card
+            chosen = self.choice_for_card(same_colour, same_value, wildcard)
+
+        print(f'{str(self.player)} played {str(chosen)}')
+        # Remove the card from hand list and playable
+        self.player.hand.remove(chosen)
+        self.player.playable_cards.remove(chosen)
+        return chosen
 
     def play_card(self, chosen_card):
         # Add the card to the discard pile
@@ -132,8 +153,7 @@ class Turn:
                 # add card to hand and next turn
                 self.player.hand.append(card_drawn)
                 print(f'{str(self.player)} pass the turn')
-        self.evaluate_hand()
-        print(f'{str(self.player)} has {len(self.player.hand)} in its hand')
+        
 
     
 
