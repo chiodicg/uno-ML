@@ -113,7 +113,6 @@ class Turn:
         print(f'This is the list of {str(self.player)} playable cards by colour: {show_cards_list(same_colour)}')
         print(f'This is the list of {str(self.player)} playable cards by value: {show_cards_list(same_value)}')
         print(f'This is the list of {str(self.player)} playable cards by wildcard: {show_cards_list(wildcard)}')
-        # If card on pile is plus2, then only play a plus
         chosen = self.choice_for_card(same_colour, same_value, wildcard)
         while chosen is False:
             chosen = self.choice_for_card(same_colour, same_value, wildcard)
