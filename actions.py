@@ -28,28 +28,22 @@ def reverse_order(play_direction):
     else:
         play_direction = 1
 
-def colour_chosen_validation(chosen_colour):
-    if chosen_colour == '' or chosen_colour == 'random':
-        return Card(random.choice(colours),None)
-    elif not chosen_colour in colours:
-        return False
-    else:
+def get_colour_chosen(chosen_colour):
+    if chosen_colour in colours:
         return Card(chosen_colour,None)
-    
-def colour_choice(player):
-    if player.bot:
-        return colour_chosen_validation('random')
     else:
-        next_colour = str(input('Please, select a colour for the next round. The choices are: random, red, blue, green or yellow.')).lower()
-        return colour_chosen_validation(next_colour)
+        return Card(random.choice(colours),None)
+    
+def colour_choice():
+    next_colour = str(input('Please, select a colour for the next round. The choices are: random, red, blue, green or yellow.')).lower()
+    return get_colour_chosen(next_colour)
 
-def choose_colour(deck, player):
-    next_colour = colour_choice(player)
-    
-    while next_colour is False:
-        next_colour = colour_choice()
-    
+def choose_colour(deck, player, choice):
+    if player.bot:
+        choice = 'random'
+    next_colour = get_colour_chosen(choice)
     deck.discard(next_colour)
+    
 
 def evaluate_card_played(deck):
     last_card = deck.get_last_discarded()
