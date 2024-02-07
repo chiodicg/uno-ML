@@ -15,34 +15,23 @@ class Agent:
         self.epsilon = 0 # rate of random actions (exploration)
         self.gamma = 0.9 # discount rate -> closer to 1 gives more importance to reward at the end
         self.memory = deque(maxlen=MAX_MEMORY) # queue for memory; when full, it will automatically remove the element on the left
-        self.model = Linear_QNet(9, 256, 4)
+        self.model = Linear_QNet(3, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+        self.game = None
 
     '''
     States:
     - Do I have a card mathing value? True(1) or False(0)
     - Do I have a card matching colour? True(1) or False(0)
     - Do I have a wildcard? True(1) or False(0)
-
-    Possible states:
-    01) 0 0 0 -> no playable cards, draw
-    02) 1 0 0 -> play colour
-    03) 0 1 0 -> play value
-    04) 0 0 1 -> play wildcard
-    06) 1 1 0 -> play card (colour or value)
-    07) 1 0 1 -> play card (colour or wild)
-    08) 0 1 1 -> play card (wild or value)
-    09) 1 1 1 -> play card (colour or value or wild)
     '''
     def get_state(self, game):
         state = [
             (len(game.match_colour) > 0),
             (len(game.match_value) > 0),
-            (len(game.wildcard) > 0),
-            game.game_over,
+            (len(game.wildcard) > 0)
         ]
         np_state = np.array(state, dtype=int)
-        print(state, np_state)
 
         return np_state
 
@@ -61,71 +50,79 @@ class Agent:
     def train_short_memory(self, state, action, reward, next_state, game_over):
         self.trainer.train_step(state, action, reward, next_state, game_over)
 
-
+    """  Possible states and actions:
+        01) 0 0 0 -> no playable cards, draw
+        02) 1 0 0 -> play colour
+        03) 0 1 0 -> play value
+        04) 0 0 1 -> play wildcard
+        05) 1 1 0 -> play card (colour or value)
+        06) 1 0 1 -> play card (colour or wild)
+        07) 0 1 1 -> play card (wild or value)
+        08) 1 1 1 -> play card (colour or value or wild) """
     def get_action(self, state):
-        actions = ["colour", "value", "wildcard", 'draw']
+        action = [0,0,0]
+        choice = None
         # random moves: tradeoff exploration / exploitation
-        self.epsilon = 80 - self.n_games
+        self.epsilon = 80 - self.number_games
         if random.randint(0, 200) < self.epsilon:
-            choice = random.randint(0, 3)
+            choice = random.randint(0, 2)
         else:
             state0 = torch.tensor(state, dtype=torch.float)
-            # Will predict a model with 4 values (output)
+            print(state, state0)
+            # Will predict a model with 3 values (output)
             prediction = self.model(state0)
             # Get which index is the max value -> use the same index to choose an action
             choice = torch.argmax(prediction).item()
             print(state0, prediction, torch.argmax(prediction), choice)
+        print(choice)
+        if not choice is None: action[choice] = 1
 
-        print(choice, actions[choice])
-        return actions[choice]
+        print('get action returns ', action)
+        return action
+    
+    def handle_turn(self):
+        game = self.game
+        current_state = self.get_state(game)
+        action = self.get_action(current_state)
 
-
-def train():
-    # plot_win = []
-    # plot_mean_win = []
-    # total_turn = 0
-    # turn_record = 1000
-    agent = Agent()
-    game = UNO_Game(2,1)
-    while True:
-        # get old state
-        state_old = agent.get_state(game)
-
-        # get action (choose a card)
-        choose_card = agent.get_action(state_old)
-
-        # perform action and get the reward for this action or if the game is over
-        # TODO: implement the play step on the game!
-        reward, game_over = game.start_game(choose_card)
-        print(reward, game_over, state_old, choose_card)
+        eval_turn, reward, game_over = game.turn.play(action)
+        # reward = game.play_hand(self.agent.player, action)
+        print('return from play ', reward, game_over, current_state, action)
 
         # calculate the new state
-        state_new = agent.get_state(game)
+        new_state = self.get_state(game)
 
         # train short memory
-        agent.train_short_memory(state_old, choose_card, reward, state_new, game_over)
+        self.train_short_memory(current_state, action, reward, new_state, game_over)
 
-        agent.remember(state_old, choose_card, reward, state_new, game_over)
+        self.remember(current_state, action, reward, new_state, game_over)
 
         if game_over:
             turn_count = game.turn_count
-            # Reset game, increase the count, and train long memory, plot result
-            game.reset()
-            agent.number_games += 1
-            agent.train_long_memory()
+            self.reset_game()
+            self.number_games += 1
+            self.train_long_memory()
+            self.model.save()
 
-            # if turn_count < turn_record:
-            #     # plot_win.append(game.winning_player)
-            agent.model.save()
+            print('Game', self.number_games, 'Turns', turn_count)
 
-            print('Game', agent.number_games, 'Turns', turn_count)
+        return eval_turn, reward, game_over
+    
+    def get_game(self):
+        if self.game == None:
+            self.reset_game()
+        return self.game
+    
+    def start(self):
+        game = self.get_game()
+        game.start_game()
 
-            # total_score += score
-            # mean_score = total_score / agent.n_games
-            # plot_mean_scores.append(mean_score)
-            # plot(plot_scores, plot_mean_scores)
-
+    def reset_game(self):
+        game = UNO_Game(2,1)
+        self.game = game
+        game.play_notifier('Player-2', self.handle_turn)
 
 
 if __name__ == '__main__':
-    train()
+   agent = Agent()
+   agent.start()

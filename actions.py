@@ -32,7 +32,7 @@ def get_colour_chosen(chosen_colour):
     if chosen_colour in colours:
         return Card(chosen_colour,None)
     else:
-        return Card(random.choice(colours),None)
+        return Card(random.choice(colours), None, 0)
     
 def colour_choice():
     next_colour = str(input('Please, select a colour for the next round. The choices are: random, red, blue, green or yellow.')).lower()

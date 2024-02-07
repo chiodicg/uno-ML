@@ -66,10 +66,10 @@ class Deck:
         while len(self.cards_pile) < 1 or self.cards_pile[-1].value not in range(0,10):
             self.discard(self.draw_card())
 
-    def deal_cards(self, players):
+    def deal_cards(self, list_of_players):
         for x in range(0,7):
-            for player in list(players.keys()):
-                players[player].add_to_hand(self.draw_card())
+            for player in list_of_players:
+                player.add_to_hand(self.draw_card())
 
 def show_cards_list(list: list[Card]):
     cards = []

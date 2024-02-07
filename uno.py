@@ -8,6 +8,7 @@ class UNO_Game:
         self.number_players = number_players
         self.number_bots = number_bots
         self.list_of_players =  self.get_players()
+        self.handle_play = {}
         self.turn_count = 0
         self.game_over = False
         self.play_direction = 1
@@ -21,6 +22,7 @@ class UNO_Game:
         self.wildcard = None
         self.last_card_played = None
         self.reward = 0
+        self.turn = None
 
     def get_players(self):
         list_players = []
@@ -36,10 +38,10 @@ class UNO_Game:
         return f'End of the game, with {self.turn_count} turns. {self.winning_player} wins.'
 
     def initialise_game(self):
-        self.deck.deal_cards(self.players)
+        self.deck.deal_cards(self.list_of_players)
         self.deck.flip_card()
 
-    def check_preturn_action(self):
+    def check_preturn_action(self, reward):
         if self.action_preturn:
             current = self.list_of_players[self.current_player]
             next_player = self.list_of_players[get_next_player(self.current_player, self.turn_count, self.number_players, self.play_direction)]
@@ -48,7 +50,7 @@ class UNO_Game:
                     print(f'{str(next_player)} draws {self.plus2_counter} cards')
                     draw_cards(self.deck, self.plus2_counter, next_player)
                     self.plus2_counter = 2
-                    self.reward = self.reward - 2
+                    reward = reward - 2
                 else:
                     self.plus2_counter = self.plus2_counter + 2
             if self.action_preturn == 'plus4':
@@ -66,53 +68,49 @@ class UNO_Game:
                 self.current_player = get_next_player(self.current_player, self.turn_count, self.number_players, self.play_direction)
             self.action_preturn = None
 
-    def play_step(self, choice):
-        eval_turn, turn_reward, is_over = turn.play(choice)
-        print(eval_turn)
-        if is_over:
-            self.winning_player = str(self.list_of_players[self.current_player])
-            self.game_over = True
-            self.reward = self.reward + turn_reward
-
-        else:
-            self.action_preturn = evaluate_card_played(self.deck)
-            self.turn_count += 1
-
-        self.match_colour = turn.same_colour
-        self.match_value = turn.same_value
-        self.wildcard = turn.wildcard
-        self.last_card_played = turn.chosen_card
-
-    def start_game(self, action = None):
+    def start_game(self):
         self.initialise_game()
+        reward = 0
         # For now, player 1 always start
         # TODO: add number of games to play, and rotate who starts between the number of players
         while not self.game_over:
-            self.check_preturn_action()
+        
+            self.check_preturn_action(reward)
 
             self.current_player = get_next_player(self.current_player, self.turn_count, self.number_players, self.play_direction)
-            turn = Turn(self.list_of_players[self.current_player], self.deck)
+            player = self.list_of_players[self.current_player]
+            self.turn = Turn(player, self.deck)
 
-            eval_turn, turn_reward, is_over = turn.play(action)
-            print(eval_turn)
+            self.match_colour = self.turn.same_colour
+            self.match_value = self.turn.same_value
+            self.wildcard = self.turn.wildcard
+            self.last_card_played = self.turn.chosen_card
+
+            if str(player) in self.handle_play:
+                handler = self.handle_play.get(str(player))
+                eval_turn, turn_reward, is_over = handler()
+            else: 
+                eval_turn, turn_reward, is_over = self.turn.play('random')
+
+            print(eval_turn, turn_reward, is_over)
             if is_over:
-                self.winning_player = str(self.list_of_players[self.current_player])
+                self.winning_player = str(player)
                 self.game_over = True
-                self.reward = self.reward + turn_reward
+                reward = reward + turn_reward
 
             else:
                 self.action_preturn = evaluate_card_played(self.deck)
                 self.turn_count += 1
 
-            self.match_colour = turn.same_colour
-            self.match_value = turn.same_value
-            self.wildcard = turn.wildcard
-            self.last_card_played = turn.chosen_card
+
 
         return f'End of the game, with {self.turn_count} turns. {self.winning_player} wins.'
+    
+    def play_notifier(self, player, handler):
+        self.handle_play[player] = handler
 
-print(UNO_Game(2,2).start_game())
-UNO_Game().start_game()
+# print(UNO_Game(2,2).start_game())
+# UNO_Game().start_game()
 
 
 

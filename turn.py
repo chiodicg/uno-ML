@@ -1,6 +1,7 @@
 from cards import show_cards_list, Card
 from actions import draw_cards
 import random
+import numpy as np
 
 """ Put playable cards in order:
 1. Highest numbered cards
@@ -32,10 +33,16 @@ class Turn:
         self.chosen_card = None
         print(f'The card on the table is {str(self.card_on_pile)}. It is {str(self.player)} turn.')
         self.find_playable()
-        print(f'{str(self.player)} has {len(self.player.playable_cards)} playable cards')
+        print(f'{str(self.player)} has {len(self.player.playable_cards)} playable cards', show_cards_list(self.player.playable_cards))
         self.same_colour = [card for card in self.player.playable_cards if card.colour == self.card_on_pile.colour]
         self.same_value = [card for card in self.player.playable_cards if card.value == self.card_on_pile.value]
         self.wildcard = [card for card in self.player.playable_cards if card.colour == "wild"]
+        self.choices = {
+            'colour': self.same_colour,
+            'value': self.same_value,
+            'wildcard': self.wildcard
+        }
+        self.reward = 0
         
     def shout_UNO_choice(self):
         shout_choice = input('Do you want to shout UNO? Please reply with "Yes" or "No". ').lower()
@@ -54,16 +61,11 @@ class Turn:
             return f'{str(self.player)} played {str(self.chosen_card)}. Game still ongoing'
 
     def evaluate_hand(self):
-        # To implement later if we want the option to shout UNO at any part of the play
-        # if len(self.player.hand) > 1:
-        #     if self.shout:
-        #         draw_cards(self.deck, 2, self.player)
-        #         self.shout = False
         if len(self.player.hand) == 1:
-            if self.player.bot:
-                shout = random.choice([True, False])
-            else:
-                shout = self.shout_UNO_choice()
+            # if self.player.bot:
+            shout = random.choice([True, False])
+            # else:
+            #     shout = self.shout_UNO_choice()
 
             if not shout:
                 draw_cards(self.deck, 2, self.player)
@@ -78,43 +80,16 @@ class Turn:
         self.player.playable_cards.sort(key=lambda card: sort_by_number(card), reverse=True)
 
     def get_card(self, chosen_method):
-        choices = {
-            'colour': self.same_colour,
-            'value': self.same_value,
-            'wildcard': self.wildcard
-        }
-
         if chosen_method == 'colour' or chosen_method == 'value' or chosen_method == 'wildcard':
-            return choices[chosen_method][0]
+            if len(self.choices[chosen_method]) == 0:
+                self.reward = self.reward - 1
+                return self.player.playable_cards[0]
+            else:
+                return self.choices[chosen_method][0]
         elif chosen_method == 'bot':
             return self.player.playable_cards[0]
         else:
             return self.player.playable_cards[random.randint(0, len(self.player.playable_cards)-1)]
-            
-    def choice_for_card(self):
-        if self.player.bot:
-            return self.player.playable_cards[0]
-        else:
-            methods = ''
-            if len(self.same_colour) > 0:
-                methods = methods + 'colour or '
-            if len(self.same_value) > 0:
-                methods = methods + 'value or '
-            if len(self.wildcard) > 0:
-                methods = methods + 'wildcard or '
-            methods = methods + 'random'
-
-            chosen_method = input(f'Do you want to choose a card by {methods}? ').lower()
-            return self.get_card(chosen_method)
-
-    def choose_card(self):
-        print(f'This is the list of {str(self.player)} playable cards by colour: {show_cards_list(self.same_colour)}')
-        print(f'This is the list of {str(self.player)} playable cards by value: {show_cards_list(self.same_value)}')
-        print(f'This is the list of {str(self.player)} playable cards by wildcard: {show_cards_list(self.wildcard)}')
-        chosen = self.choice_for_card()
-        while chosen is False:
-            chosen = self.choice_for_card()
-        return chosen
 
     def play_card(self, chosen_card, remove_from_hand):
         self.chosen_card = chosen_card
@@ -127,39 +102,51 @@ class Turn:
         print(f'{str(self.player)} plays the card {str(chosen_card)}')
         # TODO: self.shout_UNO_choice()
 
-    def play(self, action):
-        if self.player.bot or action is None:
-            action = 'bot'
+    def draw_card_to_play(self):
 
-        reward = 0
-        #  Decides to play a card
-        if action == 'colour' or action == 'value' or action == 'wildcard':
-            if (len(self.player.playable_cards) > 0):
+        # draw a card and receive the reward if can play with it; if not possible to play, no change in the reward.
+            print(f'{str(self.player)} is drawing a card')
+            card_drawn = self.deck.draw_card()
+            if (self.player.is_playable(card_drawn, self.card_on_pile)):
+                self.play_card(card_drawn, False)
+                print(card_drawn)
+                self.reward = self.reward + int(card_drawn.score)
+            else:
+                # add card to hand and next turn
+                self.player.hand.append(card_drawn)
+                print(f'{str(self.player)} pass the turn')
+
+    def play(self, np_action):
+        if np.array_equal(np_action, [1, 0, 0]):
+            action = 'colour'
+        elif np.array_equal(np_action, [0, 1, 0]):
+            action = 'value'
+        elif np.array_equal(np_action, [0, 0, 1]):
+            action = 'wildcard'
+        else:
+            action = 'random'
+
+        if (len(self.player.playable_cards) > 0):
                 chosen_card = self.get_card(action)
                 self.play_card(chosen_card, True)
-                reward = int(chosen_card.score)
-            else:
-                reward = -1
-        #  Decides to draw a card
+                print(len(self.player.playable_cards), chosen_card)
+                self.reward = self.reward + int(chosen_card.score)
         else:
-            # If have a playable card in hand, penalise it
-            if (len(self.player.playable_cards) > 0):
-                    reward = -1
-            else:
             # draw a card and receive the reward if can play with it; if not possible to play, no change in the reward.
-                print(f'{str(self.player)} is drawing a card')
-                card_drawn = self.deck.draw_card()
-                if (self.player.is_playable(card_drawn, self.card_on_pile)):
-                    self.play_card(card_drawn, False)
-                    reward = int(card_drawn.score)
-                else:
-                    # add card to hand and next turn
-                    self.player.hand.append(card_drawn)
-                    print(f'{str(self.player)} pass the turn')
+            print(f'{str(self.player)} is drawing a card')
+            card_drawn = self.deck.draw_card()
+            if (self.player.is_playable(card_drawn, self.card_on_pile)):
+                self.play_card(card_drawn, False)
+                print(card_drawn)
+                self.reward = self.reward + int(card_drawn.score)
+            else:
+                # add card to hand and next turn
+                self.player.hand.append(card_drawn)
+                print(f'{str(self.player)} pass the turn')
 
         self.evaluate_hand()
         if self.game_over:
-            reward = reward + 1000
+            self.reward = self.reward + 1000
 
-        return self.turn_message(), reward, self.game_over
+        return self.turn_message(), self.reward, self.game_over
         
