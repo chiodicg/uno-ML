@@ -85,7 +85,7 @@ class Turn:
     def get_card(self, chosen_method):
         if chosen_method == 'colour' or chosen_method == 'value' or chosen_method == 'wildcard':
             if len(self.choices[chosen_method]) == 0:
-                self.reward = self.reward - 1
+                self.reward = self.reward - 50
                 return self.player.playable_cards[0]
             else:
                 return self.choices[chosen_method][0]

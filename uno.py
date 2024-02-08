@@ -2,6 +2,7 @@ from cards import Deck, show_cards_list
 from players import Player
 from turn import Turn
 from actions import get_next_player,draw_cards,reverse_order, choose_colour, evaluate_card_played
+import numpy as np
 
 class UNO_Game:
     def __init__(self, number_players=None, number_bots=None, handle_end_of_turn=None):
@@ -17,10 +18,6 @@ class UNO_Game:
         self.plus2_counter = 2
         self.winning_player = None
         self.deck = Deck()
-        self.match_colour = None
-        self.match_value = None
-        self.wildcard = None
-        self.last_card_played = None
         self.reward = 0
         self.turn = None
         self.handle_end_of_turn = handle_end_of_turn
@@ -41,6 +38,18 @@ class UNO_Game:
     def initialise_game(self):
         self.deck.deal_cards(self.list_of_players)
         self.deck.flip_card()
+
+    def get_state(self):
+        last_card = self.deck.get_last_discarded()
+        player = self.list_of_players[-1]
+        player.find_playable_card(last_card)
+        state = [
+        len([card for card in player.playable_cards if card.colour == last_card.colour]) > 0,
+        len([card for card in player.playable_cards if card.value == last_card.value]) > 0,
+        len([card for card in player.playable_cards if card.colour == 'wildcard']) > 0]
+        np_state = np.array(state, dtype=int)
+
+        return np_state
 
     def check_preturn_action(self):
         if self.action_preturn:
@@ -77,12 +86,6 @@ class UNO_Game:
             self.current_player = get_next_player(self.current_player, self.turn_count, self.number_players, self.play_direction)
             player = self.list_of_players[self.current_player]
             self.turn = Turn(player, self.deck, self.plus2_counter)
-
-            self.match_colour = self.turn.same_colour
-            self.match_value = self.turn.same_value
-            self.wildcard = self.turn.wildcard
-            self.last_card_played = self.turn.chosen_card
-            self.plus2_counter = self.turn.plus2_counter
 
             if str(player) in self.handle_play:
                 handler = self.handle_play.get(str(player))

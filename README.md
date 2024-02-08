@@ -18,5 +18,13 @@ If you want to see bots playing, type 2 for each input. If you want to play agai
 ![Alt text](image.png)
 
 ## Reinforcement Learning
-The main branch will have the game with an AI agent playing.
-The implementation is ongoing.
+The main branch has the game with an AI agent playing.
+- Install the requirements
+```
+pip install -r requirements.txt
+```
+To train the agent, just run:
+```
+py agent.py
+```
+- It will run 100,000 games and save the data on the train_data folder
