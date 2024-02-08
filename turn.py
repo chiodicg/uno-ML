@@ -2,6 +2,8 @@ from cards import show_cards_list, Card
 from actions import draw_cards
 import random
 import numpy as np
+from actions import get_next_player,draw_cards,reverse_order, choose_colour, evaluate_card_played
+
 
 """ Put playable cards in order:
 1. Highest numbered cards
@@ -25,7 +27,7 @@ You may pickup a new card from the deck if you don't want to play or can't
 If the card you pickup is the only playable card which you have then you can play it
 """
 class Turn:
-    def __init__(self, player, deck):
+    def __init__(self, player, deck, plus2_counter):
         self.player = player
         self.deck = deck
         self.card_on_pile = deck.get_last_discarded()
@@ -43,6 +45,7 @@ class Turn:
             'wildcard': self.wildcard
         }
         self.reward = 0
+        self.plus2_counter = plus2_counter
         
     def shout_UNO_choice(self):
         shout_choice = input('Do you want to shout UNO? Please reply with "Yes" or "No". ').lower()
@@ -127,9 +130,15 @@ class Turn:
             action = 'random'
 
         if (len(self.player.playable_cards) > 0):
+                if (self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.playable_cards)):
+                    if action == 'value':
+                        self.reward = self.reward + 1
+                        self.plus2_counter = self.plus2_counter + 2
+                    else:
+                        self.reward = self.reward - 1
+                        self.plus2_counter = 2
                 chosen_card = self.get_card(action)
                 self.play_card(chosen_card, True)
-                print(len(self.player.playable_cards), chosen_card)
                 self.reward = self.reward + int(chosen_card.score)
         else:
             # draw a card and receive the reward if can play with it; if not possible to play, no change in the reward.
@@ -137,7 +146,6 @@ class Turn:
             card_drawn = self.deck.draw_card()
             if (self.player.is_playable(card_drawn, self.card_on_pile)):
                 self.play_card(card_drawn, False)
-                print(card_drawn)
                 self.reward = self.reward + int(card_drawn.score)
             else:
                 # add card to hand and next turn
@@ -147,6 +155,6 @@ class Turn:
         self.evaluate_hand()
         if self.game_over:
             self.reward = self.reward + 1000
-
-        return self.turn_message(), self.reward, self.game_over
+        print(self.turn_message())
+        return self.reward
         

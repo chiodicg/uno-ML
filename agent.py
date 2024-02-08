@@ -68,46 +68,41 @@ class Agent:
             choice = random.randint(0, 2)
         else:
             state0 = torch.tensor(state, dtype=torch.float)
-            print(state, state0)
             # Will predict a model with 3 values (output)
             prediction = self.model(state0)
             # Get which index is the max value -> use the same index to choose an action
             choice = torch.argmax(prediction).item()
-            print(state0, prediction, torch.argmax(prediction), choice)
-        print(choice)
-        if not choice is None: action[choice] = 1
-
-        print('get action returns ', action)
+        
+        action[choice] = 1
         return action
+    
+    def handle_end_of_turn(self, game_over):
+        if game_over:
+            turn_count = self.game.turn_count
+            self.number_games += 1
+            winning_player = self.game.winning_player
+            self.train_long_memory()
+            self.model.save()
+            print(f'Game: {self.number_games}, Turns: {str(turn_count)}, Winner: player {winning_player}')
+
+            self.reset_game()
     
     def handle_turn(self):
         game = self.game
         current_state = self.get_state(game)
         action = self.get_action(current_state)
 
-        eval_turn, reward, game_over = game.turn.play(action)
-        # reward = game.play_hand(self.agent.player, action)
-        print('return from play ', reward, game_over, current_state, action)
+        reward = game.turn.play(action)
 
         # calculate the new state
         new_state = self.get_state(game)
+        game_over = game.game_over
 
         # train short memory
         self.train_short_memory(current_state, action, reward, new_state, game_over)
 
         self.remember(current_state, action, reward, new_state, game_over)
 
-        if game_over:
-            turn_count = game.turn_count
-            self.reset_game()
-            self.number_games += 1
-            self.train_long_memory()
-            self.model.save()
-
-            print('Game', self.number_games, 'Turns', turn_count)
-
-        return eval_turn, reward, game_over
-    
     def get_game(self):
         if self.game == None:
             self.reset_game()
@@ -118,9 +113,10 @@ class Agent:
         game.start_game()
 
     def reset_game(self):
-        game = UNO_Game(2,1)
+        game = UNO_Game(2,1,self.handle_end_of_turn)
         self.game = game
         game.play_notifier('Player-2', self.handle_turn)
+        game.start_game()
 
 
 if __name__ == '__main__':
