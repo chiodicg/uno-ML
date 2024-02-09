@@ -31,7 +31,7 @@ def store_score(game_number, winner, number_of_turns):
 
 plt.ion()
 
-def plot(wins, players):
+def plot(wins, players, last_game):
     display.clear_output(wait=True)
     display.display(plt.gcf())
     plt.clf()
@@ -40,3 +40,5 @@ def plot(wins, players):
     plt.xlabel('Players')
     plt.bar(players, wins)
     plt.pause(.1)
+    if last_game:
+        plt.savefig('train_data/training_plot' + current_timestamp + '.png')

@@ -77,7 +77,8 @@ class Agent:
                 self.number_wins += 1
             else:
                 self.number_loses += 1
-            plot([self.number_loses, self.number_wins], ['Player-1: PC', 'Player-2: AI'])
+            last_game = self.game_count == self.number_of_games
+            plot([self.number_loses, self.number_wins], ['Player-1: PC', 'Player-2: AI'], last_game)
     
     def handle_turn(self):
         game = self.game
@@ -112,7 +113,7 @@ class Agent:
 
 
 if __name__ == '__main__':
-   agent = Agent()
+   agent = Agent(2)
    agent.start()
    print('Number of wins: ' + str(agent.number_wins))
    print('Number of losses: ' + str(agent.number_loses))
