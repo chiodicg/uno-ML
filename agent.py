@@ -114,3 +114,5 @@ class Agent:
 if __name__ == '__main__':
    agent = Agent()
    agent.start()
+   print('Number of wins: ' + str(agent.number_wins))
+   print('Number of losses: ' + str(agent.number_loses))

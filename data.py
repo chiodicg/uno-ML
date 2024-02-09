@@ -1,11 +1,8 @@
 from csv import writer, reader
 from pathlib import Path
 from datetime import datetime
-import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 from IPython import display
-import matplotlib.animation as animation
 
 current_timestamp = datetime.today().strftime('%d-%m-%Y')
 
