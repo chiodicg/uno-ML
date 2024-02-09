@@ -4,7 +4,7 @@ import numpy as np
 from collections import deque
 from uno import UNO_Game
 from model import Linear_QNet, QTrainer
-from data import store_move, store_score
+from data import store_move, store_score, plot
 
 MAX_MEMORY = 100_000
 BATCH_SIZE=1_000
@@ -21,6 +21,8 @@ class Agent:
         self.game = None
         self.number_of_games = number_of_games
         self.game_over = False
+        self.number_wins = 0
+        self.number_loses = 0
 
     def remember(self, state, action, reward, next_state, game_over):
         self.memory.append((state, action, reward, next_state, game_over))
@@ -71,6 +73,11 @@ class Agent:
             self.model.save()
             print(f'Game: {self.game_count}, Turns: {str(turn_count)}, Winner: {winning_player}')
             store_score(self.game_count, winning_player, turn_count)
+            if winning_player == 'Player-2':
+                self.number_wins += 1
+            else:
+                self.number_loses += 1
+            plot([self.number_loses, self.number_wins], ['Player-1', 'Player-2'])
     
     def handle_turn(self):
         game = self.game
@@ -105,5 +112,5 @@ class Agent:
 
 
 if __name__ == '__main__':
-   agent = Agent(100000)
+   agent = Agent()
    agent.start()
