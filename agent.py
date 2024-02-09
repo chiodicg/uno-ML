@@ -77,7 +77,7 @@ class Agent:
                 self.number_wins += 1
             else:
                 self.number_loses += 1
-            plot([self.number_loses, self.number_wins], ['Player-1', 'Player-2'])
+            plot([self.number_loses, self.number_wins], ['Player-1: PC', 'Player-2: AI'])
     
     def handle_turn(self):
         game = self.game
