@@ -132,10 +132,10 @@ class Turn:
         if (len(self.player.playable_cards) > 0):
                 if (self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.playable_cards)):
                     if action == 'value':
-                        self.reward = self.reward + 1
+                        self.reward = self.reward + 10
                         self.plus2_counter = self.plus2_counter + 2
                     else:
-                        self.reward = self.reward - 1
+                        self.reward = self.reward - 10
                         self.plus2_counter = 2
                 chosen_card = self.get_card(action)
                 self.play_card(chosen_card, True)

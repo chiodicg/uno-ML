@@ -10,7 +10,6 @@ def write_data(path, data):
     with open(path, 'a') as csv_obj:
         writer_obj = writer(csv_obj)
         writer_obj.writerow(data)
-
         csv_obj.close()
 
 def store_move(old_state, action, reward, new_state, game_over):
@@ -41,4 +40,4 @@ def plot(wins, players, last_game):
     plt.bar(players, wins)
     plt.pause(.1)
     if last_game:
-        plt.savefig('train_data/training_plot' + current_timestamp + '.png')
+        plt.savefig('train_data/training_plot_' + current_timestamp + '.png')
