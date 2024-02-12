@@ -127,7 +127,7 @@ class Turn:
         elif np.array_equal(np_action, [0, 0, 1]):
             action = 'wildcard'
         else:
-            action = 'random'
+            action = 'bot'
 
         if (len(self.player.playable_cards) > 0):
                 if (self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.playable_cards)):

@@ -91,7 +91,7 @@ class UNO_Game:
                 handler = self.handle_play.get(str(player))
                 handler()
             else: 
-                self.turn.play('random')
+                self.turn.play('bot')
 
             if self.turn.game_over:
                 self.game_over = True
