@@ -43,6 +43,11 @@ class UNO_Game:
         last_card = self.deck.get_last_discarded()
         player = self.list_of_players[-1]
         player.find_playable_card(last_card)
+        """ 
+        States:
+        1) Matching colour in playable cards?
+        2) Matching number in playable cards?
+        3) Has a wildcard? """
         state = [
         len([card for card in player.playable_cards if card.colour == last_card.colour]) > 0,
         len([card for card in player.playable_cards if card.value == last_card.value]) > 0,
