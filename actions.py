@@ -50,3 +50,20 @@ def evaluate_card_played(deck):
     # Evaluate if the card on the table is an action or wildcard, assing its value to the action for next turn (plus2, plus4, skip, reverse, colour)
     if isinstance(last_card.value, str):
         return last_card.value
+    
+def count_colours(hand):
+    count = {'R': 0, 'G': 0, 'Y': 0, 'B': 0, 'W': 0}
+    count['R'] = len([card for card in hand if card.colour == 'red'])
+    count['G'] = len([card for card in hand if card.colour == 'green'])
+    count['Y'] = len([card for card in hand if card.colour == 'yellow'])
+    count['B'] = len([card for card in hand if card.colour == 'blue'])
+    count['W'] = len([card for card in hand if card.colour == 'wild'])
+
+    return count
+
+def predominant(count):
+    return [keys for keys,values in count.items() if values == max(count.values())]
+
+def analyse_hand(hand):
+    count = count_colours(hand)
+    return count, predominant(count)

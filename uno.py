@@ -1,8 +1,9 @@
 from cards import Deck, show_cards_list
 from players import Player
 from turn import Turn
-from actions import get_next_player,draw_cards,reverse_order, choose_colour, evaluate_card_played
+from actions import get_next_player,draw_cards,reverse_order, choose_colour, evaluate_card_played, analyse_hand
 import numpy as np
+from statistics import mean
 
 class UNO_Game:
     def __init__(self, number_players=None, number_bots=None, handle_end_of_turn=None):
@@ -42,11 +43,43 @@ class UNO_Game:
     def get_state(self):
         last_card = self.deck.get_last_discarded()
         player = self.list_of_players[-1]
+        opponent = self.list_of_players[0]
         player.find_playable_card(last_card)
+        colour_counts, predominant_colours = analyse_hand(player.hand)
+        matching_colour_numbered = [card for card in player.playable_cards if card.colour == last_card.colour and card.score <= 9]
+        if len(matching_colour_numbered) > 0:
+            average_score_matching_colours = mean([card.score for card in matching_colour_numbered])
+        else:
+            average_score_matching_colours = 0
+        matching_numbers = [card for card in player.playable_cards if card.value == last_card.value]
+        matching_colour_actions = [card for card in player.playable_cards if card.colour == last_card.colour and card.score >= 25]
+        wildcards = [card for card in player.playable_cards if card.colour == 'wildcard']
+        """ 
+        1) Count of red in hand 
+        2) Count of green in hand 
+        3) Count of yellow in hand 
+        4) Count of blue in hand 
+        5) How many matching colours numbered cards? Int
+        6) Are coloured numbers average > 4? T/F
+        7) How many matching numbers? Int
+        8) Any matching numbers in predominant colour? T/F
+        9) How many matching colour actions? Int
+        10) How many wildcards? Int
+        11) Does the opponent has less than 3 cards? T/F
+        """
         state = [
-        len([card for card in player.playable_cards if card.colour == last_card.colour]) > 0,
-        len([card for card in player.playable_cards if card.value == last_card.value]) > 0,
-        len([card for card in player.playable_cards if card.colour == 'wildcard']) > 0]
+        # colour_counts['R'],
+        # colour_counts['G'],
+        # colour_counts['Y'],
+        # colour_counts['B'],
+        len(matching_colour_numbered),
+        average_score_matching_colours > 4,
+        len(matching_numbers),
+        len([card for card in matching_numbers if any(card.colour.startswith(colour.lower()) for colour in predominant_colours)]) > 0,
+        len(matching_colour_actions),
+        len(wildcards),
+        len(opponent.hand) < 3
+        ]
         np_state = np.array(state, dtype=int)
 
         return np_state

@@ -1,8 +1,7 @@
-from cards import show_cards_list, Card
+from cards import show_cards_list
 from actions import draw_cards
 import random
-import numpy as np
-from actions import get_next_player,draw_cards,reverse_order, choose_colour, evaluate_card_played
+from actions import draw_cards, analyse_hand
 
 
 """ Put playable cards in order:
@@ -39,10 +38,11 @@ class Turn:
         self.same_colour = [card for card in self.player.playable_cards if card.colour == self.card_on_pile.colour]
         self.same_value = [card for card in self.player.playable_cards if card.value == self.card_on_pile.value]
         self.wildcard = [card for card in self.player.playable_cards if card.colour == "wild"]
+        self.count_colours, self.predominant_colours = analyse_hand(player.hand)
         self.choices = {
-            'colour': self.same_colour,
-            'value': self.same_value,
-            'wildcard': self.wildcard
+            'colour': {'low': [card for card in self.same_colour if card.score <= 4], 'high': [card for card in self.same_colour if card.score > 4 and card.score < 10], 'action': [card for card in self.same_colour if card.score > 20], 'any': self.same_colour},
+            'value': {'predominant': [card for card in self.same_value if any(card.colour.startswith(colour.lower()) for colour in self.predominant_colours)], 'any': self.same_value},
+            'wildcard': {'any': self.wildcard}
         }
         self.reward = 0
         self.plus2_counter = plus2_counter
@@ -70,10 +70,10 @@ class Turn:
             # else:
             #     shout = self.shout_UNO_choice()
 
-            if not shout:
-                draw_cards(self.deck, 2, self.player)
-            else:
-                print(f'{str(self.player)} shouts UNO!')
+            # if not shout:
+            #     draw_cards(self.deck, 2, self.player)
+            # else:
+            print(f'{str(self.player)} shouts UNO!')
         elif len(self.player.hand) == 0:
             self.game_over = True
         print(f'{str(self.player)} has {len(self.player.hand)} in its hand')
@@ -82,13 +82,13 @@ class Turn:
         self.player.find_playable_card(self.card_on_pile)
         self.player.playable_cards.sort(key=lambda card: sort_by_number(card), reverse=True)
 
-    def get_card(self, chosen_method):
+    def get_card(self, chosen_method, subselection):
         if chosen_method == 'colour' or chosen_method == 'value' or chosen_method == 'wildcard':
-            if len(self.choices[chosen_method]) == 0:
+            if len(self.choices[chosen_method]['any']) == 0 or len(self.choices[chosen_method][subselection]) == 0:
                 self.reward = self.reward - 50
                 return self.player.playable_cards[0]
             else:
-                return self.choices[chosen_method][0]
+                return self.choices[chosen_method][subselection][0]
         elif chosen_method == 'bot':
             return self.player.playable_cards[0]
         else:
@@ -119,25 +119,22 @@ class Turn:
                 self.player.hand.append(card_drawn)
                 print(f'{str(self.player)} pass the turn')
 
-    def play(self, np_action):
-        if np.array_equal(np_action, [1, 0, 0]):
-            action = 'colour'
-        elif np.array_equal(np_action, [0, 1, 0]):
-            action = 'value'
-        elif np.array_equal(np_action, [0, 0, 1]):
-            action = 'wildcard'
-        else:
-            action = 'bot'
+    def play(self, action):
+        breakdown_action = action.split('-')
+        action = breakdown_action[0]
+        subaction = None
+        if len(breakdown_action) > 1:
+            subaction = breakdown_action[1]
 
         if (len(self.player.playable_cards) > 0):
                 if (self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.playable_cards)):
                     if action == 'value':
-                        self.reward = self.reward + 10
+                        self.reward = self.reward + 20
                         self.plus2_counter = self.plus2_counter + 2
                     else:
-                        self.reward = self.reward - 10
+                        self.reward = self.reward - 20
                         self.plus2_counter = 2
-                chosen_card = self.get_card(action)
+                chosen_card = self.get_card(action, subaction)
                 self.play_card(chosen_card, True)
                 self.reward = self.reward + int(chosen_card.score)
         else:

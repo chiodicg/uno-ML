@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime
 import matplotlib.pyplot as plt
 from IPython import display
+import os
 
 current_timestamp = datetime.today().strftime('%d-%m-%Y')
 
@@ -11,6 +12,22 @@ def write_data(path, data):
         writer_obj = writer(csv_obj)
         writer_obj.writerow(data)
         csv_obj.close()
+
+def get_filename(initial, extension):
+    path = './model/' if initial == 'model' else './train_data/'
+    count = 0
+    filename = initial + '_' + current_timestamp + '_' + str(count) + extension
+    while os.path.exists(path + filename):
+        count += 1
+        filename = initial + '_' + current_timestamp + '_' + str(count) + extension
+    return filename
+
+def rename_last_dataset():
+    path = './train_data/'
+    renamed_scores = get_filename('scores', '.csv')
+    renamed_training = get_filename('training', '.csv')
+    os.rename(path + 'training_' + current_timestamp + '.csv', path + renamed_training)
+    os.rename(path + 'scores_' + current_timestamp + '.csv', path + renamed_scores)
 
 def store_move(old_state, action, reward, new_state, game_over):
     rows = [old_state, action, reward, new_state, game_over]
@@ -40,4 +57,4 @@ def plot(wins, players, last_game):
     plt.bar(players, wins)
     plt.pause(.1)
     if last_game:
-        plt.savefig('train_data/training_plot_' + current_timestamp + '.png')
+        plt.savefig('train_data/' + get_filename('training_plot','.png'))
