@@ -71,8 +71,7 @@ class Agent:
             turn_count = self.game.turn_count
             winning_player = self.game.winning_player
             self.train_long_memory()
-            model_name = get_filename('model', '.pth')
-            self.model.save(model_name)
+            self.model.save()
             print(f'Game: {self.game_count}, Turns: {str(turn_count)}, Winner: {winning_player}')
             store_score(self.game_count, winning_player, turn_count)
             if winning_player == 'Player-2':
@@ -117,7 +116,7 @@ class Agent:
 
 
 if __name__ == '__main__':
-    agent = Agent(1)
+    agent = Agent(100000)
     agent.start()
     print('Number of wins: ' + str(agent.number_wins))
     print('Number of losses: ' + str(agent.number_loses))

@@ -26,8 +26,10 @@ def rename_last_dataset():
     path = './train_data/'
     renamed_scores = get_filename('scores', '.csv')
     renamed_training = get_filename('training', '.csv')
+    renamed_model = get_filename('model', '.pth')
     os.rename(path + 'training_' + current_timestamp + '.csv', path + renamed_training)
     os.rename(path + 'scores_' + current_timestamp + '.csv', path + renamed_scores)
+    os.rename('./model/' + 'model.pth', './model/' + renamed_model)
 
 def store_move(old_state, action, reward, new_state, game_over):
     rows = [old_state, action, reward, new_state, game_over]
