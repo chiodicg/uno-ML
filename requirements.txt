@@ -1,4 +1,4 @@
-random
 numpy
-deque
 torch
+IPython
+matplotlib
