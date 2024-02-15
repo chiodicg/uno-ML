@@ -55,28 +55,20 @@ class UNO_Game:
         matching_colour_actions = [card for card in player.playable_cards if card.colour == last_card.colour and card.score >= 25]
         wildcards = [card for card in player.playable_cards if card.colour == 'wildcard']
         """ 
-        1) Count of red in hand 
-        2) Count of green in hand 
-        3) Count of yellow in hand 
-        4) Count of blue in hand 
-        5) How many matching colours numbered cards? Int
-        6) Are coloured numbers average > 4? T/F
-        7) How many matching numbers? Int
-        8) Any matching numbers in predominant colour? T/F
-        9) How many matching colour actions? Int
-        10) How many wildcards? Int
-        11) Does the opponent has less than 3 cards? T/F
+        1) How many matching colours numbered cards? Int
+        2) Are coloured numbers average > 4? T/F
+        3) How many matching colour actions? Int
+        4) How many matching numbers? Int
+        5) Any matching numbers in predominant colour? T/F
+        6) How many wildcards? Int
+        7) Does the opponent has less than 3 cards? T/F
         """
         state = [
-        # colour_counts['R'],
-        # colour_counts['G'],
-        # colour_counts['Y'],
-        # colour_counts['B'],
         len(matching_colour_numbered),
         average_score_matching_colours > 4,
+        len(matching_colour_actions),
         len(matching_numbers),
         len([card for card in matching_numbers if any(card.colour.startswith(colour.lower()) for colour in predominant_colours)]) > 0,
-        len(matching_colour_actions),
         len(wildcards),
         len(opponent.hand) < 3
         ]

@@ -20,8 +20,6 @@ def analyse_scores_file(file):
     print(f'% AI Wins: {round(wins["Player-2"]/total_games * 100, 1)}')
     print(f'% PC Wins: {round(wins["Player-1"]/total_games * 100, 1)}')
 
-analyse_scores_file('train_data/scores_13-02-2024_2.csv')
-
 current_timestamp = datetime.today().strftime('%d-%m-%Y')
 
 def write_data(path, data):
