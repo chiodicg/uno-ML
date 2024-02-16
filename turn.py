@@ -105,19 +105,31 @@ class Turn:
         print(f'{str(self.player)} plays the card {str(chosen_card)}')
         # TODO: self.shout_UNO_choice()
 
-    def draw_card_to_play(self):
-
-        # draw a card and receive the reward if can play with it; if not possible to play, no change in the reward.
-            print(f'{str(self.player)} is drawing a card')
-            card_drawn = self.deck.draw_card()
-            if (self.player.is_playable(card_drawn, self.card_on_pile)):
-                self.play_card(card_drawn, False)
-                print(card_drawn)
-                self.reward = self.reward + int(card_drawn.score)
+    def _play_playable(self, action, subaction):
+        chosen_card = self.get_card(action, subaction)
+        if (self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.playable_cards)):
+            if chosen_card.value == 'plus2':
+                self.reward = self.reward + 20
+                self.plus2_counter = self.plus2_counter + 2
             else:
-                # add card to hand and next turn
-                self.player.hand.append(card_drawn)
-                print(f'{str(self.player)} pass the turn')
+                self.reward = self.reward - 20
+                self.plus2_counter = 2
+        self.play_card(chosen_card, True)
+        self.reward = self.reward + int(chosen_card.score)
+
+    def _has_payable(self):
+        return len(self.player.playable_cards) > 0
+    
+    def _draw_card(self):
+        print(f'{str(self.player)} is drawing a card')
+        card_drawn = self.deck.draw_card()
+        if (self.player.is_playable(card_drawn, self.card_on_pile)):
+            self.play_card(card_drawn, False)
+            self.reward = self.reward + int(card_drawn.score)
+        else:
+            # add card to hand and next turn
+            self.player.hand.append(card_drawn)
+            print(f'{str(self.player)} pass the turn')
 
     def play(self, action):
         breakdown_action = action.split('-')
@@ -126,28 +138,24 @@ class Turn:
         if len(breakdown_action) > 1:
             subaction = breakdown_action[1]
 
-        if (len(self.player.playable_cards) > 0):
-                if (self.card_on_pile.value == 'plus2' and any(card.value == 'plus2' for card in self.player.playable_cards)):
-                    if action == 'value':
-                        self.reward = self.reward + 20
-                        self.plus2_counter = self.plus2_counter + 2
-                    else:
-                        self.reward = self.reward - 20
-                        self.plus2_counter = 2
-                chosen_card = self.get_card(action, subaction)
-                self.play_card(chosen_card, True)
-                self.reward = self.reward + int(chosen_card.score)
-        else:
-            # draw a card and receive the reward if can play with it; if not possible to play, no change in the reward.
-            print(f'{str(self.player)} is drawing a card')
-            card_drawn = self.deck.draw_card()
-            if (self.player.is_playable(card_drawn, self.card_on_pile)):
-                self.play_card(card_drawn, False)
-                self.reward = self.reward + int(card_drawn.score)
+        # If action is to draw, but player has playable cards, then penalise the AI
+        if action == 'draw':
+            if self._has_payable():
+                self.reward = self.reward - 50
+            self._draw_card()
+        # If it is the bot, play if has playable or draw
+        elif action == 'bot':
+            if self._has_payable():
+                self._play_playable(action, subaction)
             else:
-                # add card to hand and next turn
-                self.player.hand.append(card_drawn)
-                print(f'{str(self.player)} pass the turn')
+                self._draw_card()
+        # If action is to play a card, do it if valid. If no playable, then penalise the AI and make it draw.
+        else:
+            if self._has_payable():
+                self._play_playable(action, subaction)
+            else:
+                self.reward = self.reward - 50
+                self._draw_card()
 
         self.evaluate_hand()
         if self.game_over:

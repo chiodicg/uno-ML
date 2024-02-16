@@ -16,7 +16,7 @@ class Agent:
         self.epsilon = 0 # rate of random actions (exploration)
         self.gamma = 0.9 # discount rate -> closer to 1 gives more importance to reward at the end
         self.memory = deque(maxlen=MAX_MEMORY) # queue for memory; when full, it will automatically remove the element on the left
-        self.model = Linear_QNet(7, 256, 6)
+        self.model = Linear_QNet(7, 256, 7)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         self.game = None
         self.number_of_games = number_of_games
@@ -50,12 +50,12 @@ class Agent:
     """
     def get_action(self, state):
         
-        action = [0,0,0,0,0,0]
+        action = [0,0,0,0,0,0,0]
         choice = None
         # random moves: tradeoff exploration / exploitation
         self.epsilon = 80 - self.game_count
         if random.randint(0, 200) < self.epsilon:
-            choice = random.randint(0, 5)
+            choice = random.randint(0, 6)
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             # Will predict a model with 3 values (output)
@@ -116,7 +116,7 @@ class Agent:
 
 
 if __name__ == '__main__':
-    agent = Agent(20000)
+    agent = Agent(50000)
     agent.start()
     print('Number of wins: ' + str(agent.number_wins))
     print('Number of losses: ' + str(agent.number_loses))
